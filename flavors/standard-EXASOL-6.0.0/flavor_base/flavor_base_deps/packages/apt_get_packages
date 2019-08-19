@@ -8,6 +8,7 @@ maven
 git
 python-cffi
 python-cryptography
+python-paramiko
 python-docutils
 python-enum34
 python-idna
