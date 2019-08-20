@@ -5,7 +5,7 @@ import jsonpickle
 import luigi
 import netaddr
 from luigi import LocalTarget
-
+from docker.transport import unixconn
 from exaslct_src.lib.analyze_test_container import AnalyzeTestContainer, DockerTestContainerBuild
 from exaslct_src.lib.build_config import build_config
 from exaslct_src.lib.data.container_info import ContainerInfo
@@ -84,6 +84,9 @@ class SpawnTestContainer(StoppableTask):
         # we need to mount the release directory into the test_container.
         exports_host_path = pathlib.Path(self.get_release_directory()).absolute()
         tests_host_path = pathlib.Path("./tests").absolute()
+        docker_unix_sockets=[i for i in self._client.api.adapters.values() if isinstance(i,unixconn.UnixHTTPAdapter)]
+        print("AAA_TEST_BBB",docker_unix_sockets[0].socket_path)
+        host_docker_socker_path = docker_unix_sockets[0].socket_path
         test_container = \
             self._client.containers.create(
                 image=test_container_image_info.get_target_complete_name(),
@@ -99,7 +102,13 @@ class SpawnTestContainer(StoppableTask):
                     tests_host_path: {
                         "bind": "/tests_src",
                         "mode": "ro"
+                    },
+                    #TODO only if unix socket is used for docker and check http://jpetazzo.github.io/2016/04/03/one-container-to-rule-them-all/
+                    host_docker_socker_path: {
+                        "bind": "/var/run/docker.sock",
+                        "mode": "rw"
                     }
+
                 })
         self._client.networks.get(network_info.network_name).connect(test_container, ipv4_address=ip_address)
         test_container.start()
