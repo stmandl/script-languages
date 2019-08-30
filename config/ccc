@@ -1,5 +1,9 @@
 #!/bin/bash
 
+RUNTIME_BIN_PATH="/usr/opt/EXASuite-7/EXARuntime-7.0.dev1/bin"
+[[ ":$PATH:" != *":${RUNTIME_BIN_PATH}:"* ]] && PATH="${RUNTIME_BIN_PATH}:${PATH}"
+
+
 show_usage()
 {
   cat <<'EOF'
@@ -59,12 +63,11 @@ sudo cp config/docker-daemon.json /etc/docker/daemon.json
 mkdir -p $HOME/exaslct-tmp
 sudo systemctl restart docker
 
-sudo usermod -aG docker $USER
+#sudo usermod -aG docker $USER
 
-$HOME/ccc/bin/ccc extract -m @EXARuntime-7.0.dev1
+sudo $HOME/ccc/bin/ccc extract -m @EXARuntime-7.0.dev1
 
 sed -i 's/python_version = "3.6"/python_version = "3.7"/g' Pipfile
-export PATH=/usr/opt/EXASuite-7/EXARuntime-7.0.dev1/bin:$PATH
 ./exaslct export --flavor-path=flavors/standard-EXASOL-6.1.0 --export-path output --temporary-base-directory $HOME/exaslct-tmp
 
 exit "$?"
@@ -72,7 +75,7 @@ exit "$?"
 
 test_container()
 {
-  export PATH=/usr/opt/EXASuite-7/EXARuntime-7.0.dev1/bin:$PATH
+  
   ./exaslct run-db-test --flavor-path flavors/standard-EXASOL-6.1.0
   exit "$?"
 }
